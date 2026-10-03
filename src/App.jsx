@@ -1043,6 +1043,8 @@ export default function SabiCentecFamiliaMaestros() {
       <div className="fm-wrap" style={styles.wrap}>
         {!area ? (
           <Selector onPick={setAreaId} />
+        ) : !new URLSearchParams(window.location.search).has("chat-local") ? (
+          <Puerta area={area} onBack={() => setAreaId(null)} />
         ) : (
           <Chat
             area={area}
@@ -1057,6 +1059,69 @@ export default function SabiCentecFamiliaMaestros() {
             cambiarNivel={cambiarNivel}
           />
         )}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   UN SOLO CEREBRO: cada maestro de esta Familia abre el tutor de
+   SABI Superación (Planificador + Maestro + Auditor, voz, capa de
+   aprendizaje profundo y banco de proyectos). Aquí se elige el área;
+   allá se aprende. Así estudiantes y docentes reciben siempre la
+   misma calidad, actualizada cada semana por los agentes.
+   ============================================================ */
+const SUPERACION = "https://superacion.sabicentec.com";
+const MATERIA_SUPERACION = {
+  matematicas: "Matemáticas", trigonometria: "Trigonometría", calculo: "Cálculo",
+  lenguaje: "Lenguaje", biologia: "Biología", quimica: "Química", fisica: "Física",
+  comportamientosalud: "Comportamiento y Salud", educacionsexual: "Educación Sexual y Comportamiento",
+  sociales: "Ciencias Sociales", ingles: "Inglés", artes: "Artes", etica: "Ética y Religión",
+  filosofia: "Filosofía", educacionfisica: "Educación Física", tecnologia: "Tecnología e Informática",
+  economia: "Economía y Finanzas", estadistica: "Estadística", financiera: "Matemáticas Financieras",
+  steam: "STEAM y Robótica", chino: "Mandarín", emprendimiento: "Emprendimiento",
+  senarrhh: "SENA Recursos y Talento Humano", senamovil: "SENA Aplicaciones Móviles",
+  senacontenidos: "SENA Integración de Contenidos Digitales",
+};
+function enlaceSuperacion(area, destino) {
+  const materia = MATERIA_SUPERACION[area.id] || area.nombre;
+  if (destino === "proyectos") return `${SUPERACION}/proyectos.html?area=${encodeURIComponent(materia)}`;
+  const q = new URLSearchParams({ rol: destino });
+  if (destino === "estudiante") q.set("materia", materia);
+  if (destino === "docente") q.set("tema", `Soy docente de ${materia}. Quiero planear una clase o un proyecto con fases, preguntas para que los estudiantes formulen las suyas, rúbrica por desempeños (Bajo, Básico, Alto, Superior) y apoyos DUA.`);
+  return `${SUPERACION}/tutor.html?${q.toString()}`;
+}
+
+function Puerta({ area, onBack }) {
+  const c = COLOR_MAP[area.color];
+  const opcion = (href, icono, titulo, texto, principal) => (
+    <a href={href} style={{ ...styles.card, display: "block", textDecoration: "none", borderColor: c.ring, background: principal ? c.bgSoft : styles.card.background }}>
+      <div style={{ ...styles.iconBadge, background: c.bgSoft, color: c.text }}>
+        <i className={`ti ${icono}`} style={{ fontSize: 22 }} aria-hidden="true" />
+      </div>
+      <h3 style={{ ...styles.cardTitle, color: c.text }}>{titulo}</h3>
+      <div style={{ ...styles.underline, background: c.ring }} />
+      <p style={styles.cardLema}>{texto}</p>
+    </a>
+  );
+  return (
+    <div>
+      <div style={{ ...styles.chatHeader, borderColor: c.ring }}>
+        <button onClick={onBack} style={styles.backBtn} aria-label="Volver a materias">
+          <i className="ti ti-arrow-left" style={{ fontSize: 18 }} aria-hidden="true" />
+        </button>
+        <div style={{ ...styles.iconBadge, background: c.bgSoft, color: c.text, width: 36, height: 36 }}>
+          <i className={`ti ${area.icon}`} style={{ fontSize: 18 }} aria-hidden="true" />
+        </div>
+        <div style={{ flex: 1 }}>
+          <p style={{ ...styles.chatTitle, color: c.text }}>{area.nombre}</p>
+          <p style={styles.chatLema}>{area.lema}</p>
+        </div>
+      </div>
+      <div style={{ ...styles.grid, marginTop: "1.5rem" }}>
+        {opcion(enlaceSuperacion(area, "estudiante"), "ti-school", "Soy estudiante", "Aprende con SABI: misiones, voz, pensamiento, lógica y retos hasta llegar a Superior.", true)}
+        {opcion(enlaceSuperacion(area, "proyectos"), "ti-bulb", "Proyectos del área", "Robótica, Arduino, STEAM, Raspberry Pi, programación, juegos, simulación y ABP para tu grado.")}
+        {opcion(enlaceSuperacion(area, "docente"), "ti-clipboard-text", "Soy docente", "Planea clases y proyectos con rúbricas por desempeños, preguntas y apoyos DUA. Requiere la contraseña docente.")}
       </div>
     </div>
   );
@@ -1077,8 +1142,8 @@ function Selector({ onPick }) {
         <div style={styles.chalkStroke} />
         <p style={styles.subtitle}>
           Elige el área que quieres aprender, mejorar, profundizar o superar. Cada
-          maestro se adapta a tu ritmo, tu forma de aprender hoy, y cualquier
-          condición que debas contarle.
+          maestro te lleva al tutor SABI, que se adapta a tu ritmo y te acompaña
+          con misiones, proyectos y voz.
         </p>
       </div>
       {CATEGORIAS.map((cat) => (
